@@ -11,20 +11,20 @@ import (
 
 // Storage is an adapter between the application and storage implementation
 type Storage interface {
-	Put(value WorkflowJob)
+	Put(value WorkflowJob) error
 }
 
-// RedisStorage holds a redis connection pool
+// RedisStorage holds a Redis connection pool
 type RedisStorage struct {
 	conn *redis.Client
 	ctx  context.Context
 }
 
 // InitStorage initializes and returns connection to storage
-func InitStorage(cfg Config) *RedisStorage {
+func InitStorage(cfg Config) (*RedisStorage, error) {
 	redisOptions, err := redis.ParseURL(cfg.RedisDSN)
 	if err != nil {
-		fmt.Printf("%+v", err)
+		return nil, err
 	}
 
 	rdb := &RedisStorage{
@@ -32,20 +32,20 @@ func InitStorage(cfg Config) *RedisStorage {
 		ctx:  context.Background(),
 	}
 
-	return rdb
+	return rdb, nil
 }
 
-func (rdb *RedisStorage) Put(job WorkflowJob) {
+func (rdb *RedisStorage) Put(job WorkflowJob) error {
 	ID := fmt.Sprintf("%s:%s", job.Repository, job.Name)
 	ttl, err := time.ParseDuration("5m")
 	if err != nil {
-		fmt.Printf("%+v\n", err)
+		return err
 	}
 
 	runKey := fmt.Sprintf("runs:%s:%d", ID, job.RunID)
 	redisJob, err := flatten(&job)
 	if err != nil {
-		fmt.Printf("%+v\n", err)
+		return err
 	}
 	rdb.conn.HSet(rdb.ctx, runKey, redisJob)
 	rdb.conn.Expire(rdb.ctx, runKey, ttl)
@@ -59,6 +59,8 @@ func (rdb *RedisStorage) Put(job WorkflowJob) {
 		rdb.conn.LPush(rdb.ctx, statKey, duration)
 		rdb.conn.LTrim(rdb.ctx, statKey, 0, 99)
 	}
+
+	return nil
 }
 
 func flatten(in interface{}) (map[string]interface{}, error) {
@@ -70,7 +72,7 @@ func flatten(in interface{}) (map[string]interface{}, error) {
 	}
 
 	if v.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("structFlatten only accepts struct or struct pointer")
+		return nil, fmt.Errorf("flatten accepts only struct or struct pointer")
 	}
 
 	t := v.Type()

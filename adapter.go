@@ -20,7 +20,7 @@ type WorkflowJob struct {
 }
 
 // Adapter between github.WorkflowJobPayload and WorkflowJob
-func intoWorkFlowJob(p *github.WorkflowJobPayload) WorkflowJob {
+func intoWorkFlowJob(p github.WorkflowJobPayload) WorkflowJob {
 	return WorkflowJob{
 		ID:          p.WorkflowJob.ID,
 		RunID:       p.WorkflowJob.RunID,
