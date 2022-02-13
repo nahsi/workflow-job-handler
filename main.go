@@ -9,8 +9,9 @@ import (
 )
 
 type Config struct {
-	RedisDSN string `env:"REDIS_DSN"`
-	Path     string `env:"WEBHOOK_PATH"`
+	RedisDSN      string `env:"REDIS_DSN"`
+	WebhookPath   string `env:"WEBHOOK_PATH"`
+	WebhookSecret string `env:"WEBHOOK_SECRET"`
 }
 
 func main() {
@@ -19,9 +20,9 @@ func main() {
 		fmt.Printf("%+v\n", err)
 	}
 
-	hook, _ := github.New(github.Options.Secret("haph8Cioteing3ne"))
+	hook, _ := github.New(github.Options.Secret(cfg.WebhookSecret))
 
-	http.HandleFunc(cfg.Path, func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc(cfg.WebhookPath, func(w http.ResponseWriter, r *http.Request) {
 		payload, err := hook.Parse(r, github.WorkflowJobEvent)
 		if err != nil {
 			fmt.Printf("%+v\n", err)

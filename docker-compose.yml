@@ -5,6 +5,7 @@ services:
     environment:
       REDIS_DSN: "redis://redis:6379"
       WEBHOOK_PATH: "/webhook-test"
+      WEBHOOK_SECRET: "haph8Cioteing3ne"
     ports:
       - 8123:8123
 
