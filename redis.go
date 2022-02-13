@@ -11,7 +11,7 @@ import (
 
 // Flatten RedisWorkflowJob to map of strings
 type RedisWorkflowToMap interface {
-	structFlatten(value RedisWorkflowJob, tag string) (map[string]interface{}, error)
+	flatten(value WorkflowJob, tag string) (map[string]interface{}, error)
 }
 
 // Storage is an adapter between the application and storage implementation
@@ -49,7 +49,7 @@ func (rdb *RedisStorage) Put(job WorkflowJob) {
 	ID := fmt.Sprintf("%s:%s", job.Repository, job.Name)
 
 	runKey := fmt.Sprintf("runs:%s:%d", ID, job.RunID)
-	redisJob, err := structFlatten(intoRedisWorkFlowJob(&job))
+	redisJob, err := flatten(&job)
 	if err != nil {
 		fmt.Printf("%+v\n", err)
 	}
@@ -68,7 +68,7 @@ func (rdb *RedisStorage) Put(job WorkflowJob) {
 	}
 }
 
-func structFlatten(in interface{}) (map[string]interface{}, error) {
+func flatten(in interface{}) (map[string]interface{}, error) {
 	out := make(map[string]interface{})
 
 	v := reflect.ValueOf(in)
