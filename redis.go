@@ -9,11 +9,6 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-// Flatten RedisWorkflowJob to map of strings
-type RedisWorkflowToMap interface {
-	flatten(value WorkflowJob, tag string) (map[string]interface{}, error)
-}
-
 // Storage is an adapter between the application and storage implementation
 type Storage interface {
 	Put(value WorkflowJob)
