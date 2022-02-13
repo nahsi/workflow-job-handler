@@ -41,28 +41,26 @@ func InitStorage(cfg Config) *RedisStorage {
 }
 
 func (rdb *RedisStorage) Put(job WorkflowJob) {
+	ID := fmt.Sprintf("%s:%s", job.Repository, job.Name)
 	ttl, err := time.ParseDuration("5m")
 	if err != nil {
 		fmt.Printf("%+v\n", err)
 	}
-
-	ID := fmt.Sprintf("%s:%s", job.Repository, job.Name)
 
 	runKey := fmt.Sprintf("runs:%s:%d", ID, job.RunID)
 	redisJob, err := flatten(&job)
 	if err != nil {
 		fmt.Printf("%+v\n", err)
 	}
-
 	rdb.conn.HSet(rdb.ctx, runKey, redisJob)
 	rdb.conn.Expire(rdb.ctx, runKey, ttl)
 
-	statKey := fmt.Sprintf("stats:%s", ID)
-	rdb.conn.SAdd(rdb.ctx, statKey)
-	rdb.conn.Expire(rdb.ctx, statKey, ttl)
-
 	if job.Conclusion == "success" {
+		statKey := fmt.Sprintf("stats:%s", ID)
 		duration := job.CompletedAt.Sub(job.StartedAt).Seconds()
+
+		rdb.conn.SAdd(rdb.ctx, statKey)
+		rdb.conn.Expire(rdb.ctx, statKey, ttl)
 		rdb.conn.LPush(rdb.ctx, statKey, duration)
 		rdb.conn.LTrim(rdb.ctx, statKey, 0, 99)
 	}
