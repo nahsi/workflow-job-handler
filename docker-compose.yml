@@ -1,0 +1,14 @@
+services:
+
+  workflow-job-handler:
+    build: .
+    environment:
+      REDIS_DSN: "redis://redis:6379"
+      WEBHOOK_PATH: "/webhook-test"
+    ports:
+      - 8123:8123
+
+  redis:
+    image: redis:6-alpine
+    ports:
+      - 16379:6379
